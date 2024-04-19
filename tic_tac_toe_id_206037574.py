@@ -1,11 +1,11 @@
 import random
 
 X = "X"
-Circle = "O"
+CIRCLE = "O"
 EMPTY = ""
 DEFAULT_SIZE = 3
 
-PLAYER_SYMBOL_DICT = {1: X, 2: Circle}
+PLAYER_SYMBOL_DICT = {1: X, 2: CIRCLE}
 
 
 def which_player_start() -> int:
