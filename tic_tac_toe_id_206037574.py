@@ -1,5 +1,9 @@
 # Adding my github to showcase the coding process - I am not a robot.
 # https://github.com/hagixxg28/uni_python
+"""
+@Author: Hagai Gilor
+@ID : 206037574
+"""
 import random
 
 X = "X"
