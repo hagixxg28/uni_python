@@ -1,3 +1,5 @@
+# Adding my github to showcase the coding process - I am not a robot.
+# https://github.com/hagixxg28/uni_python
 import random
 
 X = "X"
