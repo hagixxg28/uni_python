@@ -156,8 +156,7 @@ def win_in_diagonal(board: list[list[str]], player: int) -> bool:
     return False
 
 
-def win_game(board: list[list[str]], player: int,
-             turn: int, size: int) -> bool:
+def win_game(board: list[list[str]], player: int) -> bool:
     """
            Wraps all the win condition funcs together to
            check if the player won in a certain turn
@@ -166,9 +165,6 @@ def win_game(board: list[list[str]], player: int,
            :return:
               bool
     """
-    if turn < size:
-        return False
-
     if win_in_row(board=board, player=player):
         return True
 
@@ -207,15 +203,17 @@ def has_same_symbol(board: list[list[str]], symbol: str, col: int, row: int,
     return False
 
 
-def board_is_full(board: list[list[str]], turn: int) -> bool:
+def board_is_full(board: list[list[str]]) -> bool:
     """
         This function makes a basic check if the board is full.
-        The board can be filled only when a certain
-        amount of turns have been played.
            :return:
               bool
     """
-    return len(board) ** 2 < turn
+    for col in board:
+        for cell in col:
+            if cell == EMPTY:
+                return False
+    return True
 
 
 def operate_turn(board: list[list[str]], current_player: int) -> None:
@@ -236,19 +234,18 @@ def operate_turn(board: list[list[str]], current_player: int) -> None:
             return
 
 
-def has_game_ended(board: list[list[str]], current_player: int,
-                   size: int, turn: int) -> bool:
+def has_game_ended(board: list[list[str]], current_player: int) -> bool:
     """
       Performs a series of checks to see if the game has ended either
       by a tie or a win.
            :return:
               bool
     """
-    if win_game(board=board, player=current_player, turn=turn, size=size):
+    if win_game(board=board, player=current_player):
         print(str(current_player) + ' wins!')
         return True
 
-    if board_is_full(board=board, turn=turn):
+    if board_is_full(board=board):
         print("It's a tie!")
         return True
     return False
@@ -272,21 +269,14 @@ def start_game():
     current_player = which_player_start()
     board = create_board(size=size)
     print_board(board=board, size=size)
-    turn = 1
     while True:
-
-        if turn != 1:
-            current_player = next_turn(player=current_player)
-
         operate_turn(board=board, current_player=current_player)
         print_board(board=board, size=size)
 
-        game_ended = has_game_ended(board=board, current_player=current_player,
-                                    size=size, turn=turn)
+        game_ended = has_game_ended(board=board, current_player=current_player)
         if game_ended:
             break
-
-        turn += 1
+        current_player = next_turn(player=current_player)
 
 
 start_game()
