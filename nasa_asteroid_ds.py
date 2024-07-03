@@ -1,25 +1,70 @@
-from datetime import datetime
+# Adding my github to showcase the coding process - I am not a robot.
+# https://github.com/hagixxg28/uni_python
+"""
+@Author: Hagai Gilor
+@ID : 206037574
+"""
+
 from typing import Optional
 import numpy as np
+
+EST_DIA_IN_KM_MAX = 'Est Dia in KM(max)'
+
+EST_DIA_IN_KM_MIN = 'Est Dia in KM(min)'
 
 CLOSE_APPROACH_DATE = "Close Approach Date"
 EQUINOX = "Equinox"
 ORBITING_BODY = "Orbiting Body"
 NEO_REFERENCE_ID = "Neo Reference ID"
 ABSOLUTE_MAGNITUDE = "Absolute Magnitude"
+MISS_DISTANCE_KM = 'Miss Dist.(kilometers)'
+ORBIT_ID = 'Orbit ID'
+MAX = "max"
+MIN = "min"
 COLUMNS_TO_CLEAR = [EQUINOX, ORBITING_BODY, NEO_REFERENCE_ID]
 NAME = "Name"
 YEAR_2000 = "2000-01-01"
 
-NAMES = ['Neo Reference ID', NAME, ABSOLUTE_MAGNITUDE, 'Est Dia in KM(min)', 'Est Dia in KM(max)',
+NAMES = ['Neo Reference ID', NAME, ABSOLUTE_MAGNITUDE, EST_DIA_IN_KM_MIN, EST_DIA_IN_KM_MAX,
          'Est Dia in M(min)', 'Est Dia in M(max)', 'Est Dia in Miles(min)', 'Est Dia in Miles(max)',
          'Est Dia in Feet(min)', 'Est Dia in Feet(max)', CLOSE_APPROACH_DATE, 'Epoch Date Close Approach',
          'Relative Velocity km per sec', 'Relative Velocity km per hr', 'Miles per hour', 'Miss Dist.(Astronomical)',
-         'Miss Dist.(lunar)', 'Miss Dist.(kilometers)', 'Miss Dist.(miles)', 'Orbiting Body', 'Orbit ID',
+         'Miss Dist.(lunar)', MISS_DISTANCE_KM, 'Miss Dist.(miles)', 'Orbiting Body', ORBIT_ID,
          'Orbit Determination Date', 'Orbit Uncertainity', 'Minimum Orbit Intersection', 'Jupiter Tisserand Invariant',
          'Epoch Osculation', 'Eccentricity', 'Semi Major Axis', 'Inclination', 'Asc Node Longitude', 'Orbital Period',
          'Perihelion Distance', 'Perihelion Arg', 'Aphelion Dist', 'Perihelion Time', 'Mean Anomaly', 'Mean Motion',
          'Equinox', 'Hazardous\n']
+
+
+def get_column_index_by_name(header: np.array, column_name: str):
+    return np.where(header == column_name)[0][0]
+
+
+def extract_column_values(data, column_index, start_index: Optional[int] = 1) -> np.array:
+    return data[start_index:, column_index].astype(float)
+
+
+def get__val_index_in_column_by_operation(data, column_name: str, operation_type: Optional[str] = MAX):
+    header = data[0]
+    col_index = get_column_index_by_name(header=header, column_name=column_name)
+    column = extract_column_values(data=data, column_index=col_index)
+    if operation_type == MAX:
+        return np.argmax(column)
+    if operation_type == MIN:
+        return np.argmin(column)
+    raise TypeError(f"Invalid {operation_type=}")
+
+
+def get_data_by_operation_column_val(data, column_to_compare_by_name: str, columns: list[str],
+                                     operation_type: Optional[str] = MAX) -> list:
+    max_index = get__val_index_in_column_by_operation(data=data, column_name=column_to_compare_by_name,
+                                                      operation_type=operation_type)
+    values = []
+    header = data[0]
+    for column in columns:
+        col_index = get_column_index_by_name(header=header, column_name=column)
+        values.append(data[max_index + 1, col_index])
+    return values
 
 
 def load_data(file_name: str) -> np.ndarray:
@@ -74,23 +119,49 @@ def find_indexes(data: np.ndarray, items: list) -> list:
     return indexes
 
 
-def max_absolute_magnitude(data: np.ndarray) -> tuple[str, float]:
-    headers, _ = split_data(data=data)
-    indexes = find_indexes(data=headers, items=[NAME, ABSOLUTE_MAGNITUDE])
-    name_column = data[:, indexes[0]]
-    absolute_magnitude_column = data[:, indexes[1]]
-    max_index = np.argmax(absolute_magnitude_column)
-    name = str(name_column[max_index])
-    absolute_magnitude = absolute_magnitude_column[max_index]
-    print(f'{name_column=}')
-    print(f"{name=}")
-    print(f"{absolute_magnitude=}")
-    return None, None
+def max_absolute_magnitude(data: np.ndarray) -> list:
+    return get_data_by_operation_column_val(data=data, column_to_compare_by_name=ABSOLUTE_MAGNITUDE,
+                                            columns=[NAME, ABSOLUTE_MAGNITUDE], operation_type=MAX)
+
+
+def closest_to_earth(data: np.array) -> str:
+    return get_data_by_operation_column_val(data=data, column_to_compare_by_name=MISS_DISTANCE_KM,
+                                            columns=[NAME], operation_type=MIN)[0]
+
+
+def common_orbit(data) -> dict:
+    return get_count_by_column_name(data=data, column_name=ORBIT_ID)
+
+
+def get_column_values_by_name(data, column_name: str) -> np.array:
+    header = data[0]
+    col_index = get_column_index_by_name(header=header, column_name=column_name)
+    return extract_column_values(data=data, column_index=col_index)
+
+
+def get_count_by_column_name(data, column_name: str) -> dict:
+    column = get_column_values_by_name(data=data, column_name=column_name)
+    column_set = set(column)
+    count_dict = dict()
+    for value in column_set:
+        count_dict[int(value)] = int(np.sum(column == value).astype(int))
+    return count_dict
+
+
+def get_mean_by_column_name(data, column_name: str) -> float:
+    column = get_column_values_by_name(data=data, column_name=column_name)
+    return np.mean(column)
+
+
+def min_max_diameter(data) -> tuple[float, float]:
+    dia_in_km_min = float(get_mean_by_column_name(data=data, column_name=EST_DIA_IN_KM_MIN))
+    dia_in_km_max = float(get_mean_by_column_name(data=data, column_name=EST_DIA_IN_KM_MAX))
+    return dia_in_km_min, dia_in_km_max
 
 
 def main():
     data = load_data(file_name="nasa.csv")
-    print(max_absolute_magnitude(data=data))
+    print(min_max_diameter(data=data))
 
 
 main()
